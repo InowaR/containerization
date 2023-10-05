@@ -1,0 +1,53 @@
+Урок 2. Механизмы контрольных групп
+Задание 1:
+1) запустить контейнер с ubuntu, используя механизм LXC
+2) ограничить контейнер 256 Мб ОЗУ и проверить, что ограничение работает
+3) добавить автозапуск контейнеру, перезагрузить ОС и убедиться, что контейнер действительно запустился самостоятельно
+4) при создании указать файл, куда записывать логи
+5) после перезагрузки проанализировать логи
+
+    sudo apt-get install lxc
+    sudo lxc-create -t download -n my-container -- -d ubuntu -r xenial -a amd64
+    sudo lxc-start -n my-container
+    sudo lxc-cgroup -n my-container memory.limit_in_bytes 256M
+    sudo lxc-cgroup -n my-container memory.usage_in_bytes
+    sudo nano /etc/lxc/auto/my-container.conf
+        #Добавить строку:
+    lxc.start.auto = 1
+    sudo reboot
+    sudo lxc-ls --active
+    sudo nano /var/lib/lxc/my-container/config
+        #Добавить строку:
+    lxc.log.file = /var/log/my-container.log
+    sudo lxc-stop -n my-container
+    sudo lxc-start -n my-container
+    tail -f /var/log/my-container.log
+
+
+Задание 2*: настроить автоматическую маршрутизацию между контейнерами. Адреса можно взять: 10.0.12.0/24 и 10.0.13.0/24.
+
+    sudo lxc-create -t download -n container1 -- -d ubuntu -r xenial -a amd64
+    sudo lxc-create -t download -n container2 -- -d ubuntu -r xenial -a amd64
+    sudo nano /var/lib/lxc/container1/config
+        #Добавить строки:
+    lxc.net.0.type = veth
+    lxc.net.0.link = lxcbr0
+    lxc.net.0.flags = up
+    lxc.net.0.name = eth0
+    lxc.net.0.ipv4.address = 10.0.12.1/24
+    sudo nano /var/lib/lxc/container2/config
+        #Добавить строки:
+    lxc.net.0.type = veth
+    lxc.net.0.link = lxcbr0
+    lxc.net.0.flags = up
+    lxc.net.0.name = eth0
+    lxc.net.0.ipv4.address = 10.0.13.1/24
+      
+    sudo lxc-start -n container1
+    sudo lxc-start -n container2
+    sudo sysctl net.ipv4.ip_forward=1
+    sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+    sudo ip route add default via 10.0.12.1 dev eth0
+    sudo ip route add default via 10.0.13.1 dev eth0
+    sudo lxc-attach -n container1 ping 10.0.13.1
+    sudo lxc-attach -n container2 ping 10.0.12.1
