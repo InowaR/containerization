@@ -1,0 +1,17 @@
+Урок 3. Введение в Docker
+Задание:
+1) запустить контейнер с БД, отличной от mariaDB, используя инструкции на сайте: https://hub.docker.com/
+2) добавить в контейнер hostname такой же, как hostname системы через переменную
+3) заполнить БД данными через консоль
+4) запустить phpmyadmin (в контейнере) и через веб проверить, что все введенные данные доступны
+
+	sudo docker pull mysql
+	sudo docker pull phpmyadmin
+	sudo docker run --name mysql -d -e MYSQL_ROOT_PASSWORD=password --hostname mysql-host mysql:latest
+	sudo docker run --name phpmyadmin -d --link mysql:db -p 8080:80 --hostname $HOSTNAME phpmyadmin
+	sudo docker exec -it mysql bash
+	mysql -u root -p
+	CREATE DATABASE mydatabase;
+	USE mydatabase;
+	CREATE TABLE mytable (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), age INT);
+	INSERT INTO mytable (name, age) VALUES ('John', 25), ('Jane', 30), ('Bob', 40);
