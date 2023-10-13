@@ -1,0 +1,35 @@
+Урок 4. Dockerfile и слои
+Задание: необходимо создать Dockerfile, основанный на любом образе (вы в праве выбрать самостоятельно).
+В него необходимо поместить приложение, написанное на любом известном вам языке программирования (Python, Java, C, С#, C++).
+При запуске контейнера должно запускаться самостоятельно написанное приложение.
+
+	sudo docker search ubuntu
+	cd Документы/
+	ls
+	mkdir homework4
+	cd homework4/
+	touch Dockerfile
+	nano Dockerfile
+
+		# Добавить
+	FROM ubuntu
+
+	RUN apt update && \
+	    apt install -y python3
+
+	COPY hello-world.py /app/
+
+	CMD [ "python3", "/app/hello-world.py" ]
+
+
+	touch hello-world.py
+	nano hello-world.py
+
+		# Добавить
+	print(123)
+
+
+	docker build -t my-python-app .
+	sudo docker build -t my-python-app .
+	sudo docker ps
+	sudo docker run my-python-app
